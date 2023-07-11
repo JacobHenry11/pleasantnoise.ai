@@ -1,0 +1,40 @@
+from langchain import OpenAI
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from langchain.document_loaders import TextLoader
+
+
+from pathlib import Path
+import os
+
+os.environ["OPENAI_API_KEY"] = ""
+
+path = Path().home() / "Documents" / "csv1.csv"
+loader = TextLoader(path)
+document = loader.load()
+
+
+path2 = Path().home() / "Documents" / "csv2.csv"
+loader2 = TextLoader(path2)
+document2 = loader2.load()
+
+prompt_template = """Following are two lists of Event Titles, Dates and Descriptions in the format <Title>;<Date>:
+<Description>
+{csv1}
+
+{csv2}
+
+TASKS: 
+1. Show matching string values of the two lists
+2. Based on these matches, provide a natural sounding conversation starter 
+
+"""
+prompt = PromptTemplate.from_template(prompt_template)
+
+llm = OpenAI (temperature=0)
+chain = LLMChain(llm=llm, prompt=prompt)
+response = chain({"csv1": document[0].page_content, "csv2": document2[0].page_content})
+
+
+print(response['text'])
